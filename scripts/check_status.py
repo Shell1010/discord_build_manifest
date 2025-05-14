@@ -10,7 +10,7 @@ def fetch_json(url):
 
 def main():
     summary = fetch_json("https://discordstatus.com/api/v2/summary.json")
-    unresolved = fetch_json("https://discordstatus.com/api/v2/unresolved.json")
+    unresolved = fetch_json("https://discordstatus.com/api/v2/incidents/unresolved.json")
     print(summary)
     status_desc = summary["status"]["description"]
     incidents = unresolved.get("incidents", [])
