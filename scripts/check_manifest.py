@@ -3,7 +3,6 @@ import json
 import hashlib
 import os
 
-from urllib3 import request
 
 MANIFEST_URL = "https://discord.com/api/updates/distributions/app/manifests/latest?channel=canary&platform=win&arch=x86"
 CACHE_FILE = "manifest_cache.json"
@@ -27,7 +26,7 @@ def save_manifest(manifest):
 def hash_manifest(manifest):
     return hashlib.sha256(json.dumps(manifest, sort_keys=True).encode()).hexdigest()
 
-def send_webhook(message):
+def send_webhook():
     embed = {
         "title": "🚀 Discord Distribution Manifest Updated",
         "description": "A new build has been published or updated in the Discord distribution manifest.",
@@ -51,7 +50,7 @@ def main():
 
     if cached_manifest is None or hash_manifest(cached_manifest) != hash_manifest(new_manifest):
         save_manifest(new_manifest)
-        send_webhook("🚀 Discord distribution manifest has been updated!")
+        send_webhook()
     else:
         print("No changes to manifest.")
 
