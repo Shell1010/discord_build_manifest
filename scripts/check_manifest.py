@@ -3,6 +3,8 @@ import json
 import hashlib
 import os
 
+from urllib3 import request
+
 MANIFEST_URL = "https://discord.com/api/updates/distributions/app/manifests/latest?channel=canary&platform=win&arch=x86"
 CACHE_FILE = "manifest_cache.json"
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # Set this as GitHub secret
@@ -26,7 +28,22 @@ def hash_manifest(manifest):
     return hashlib.sha256(json.dumps(manifest, sort_keys=True).encode()).hexdigest()
 
 def send_webhook(message):
-    requests.post(WEBHOOK_URL, json={"content": message})
+    embed = {
+        "title": "🚀 Discord Distribution Manifest Updated",
+        "description": "A new build has been published or updated in the Discord distribution manifest.",
+        "color": 0x5865F2,  # Discord blurple
+        "timestamp": __import__("datetime").datetime.utcnow().isoformat(),
+        "footer": {
+            "text": "Discord Manifest Watcher",
+            "icon_url": "https://cdn.discordapp.com/embed/avatars/0.png"
+        }
+    }
+    data = {
+        "embeds": [embed],
+        "username": "Manifest Watcher",
+    }
+    requests.post(WEBHOOK_URL, json=data)
+
 
 def main():
     new_manifest = get_remote_manifest()
