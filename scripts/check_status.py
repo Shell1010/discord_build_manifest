@@ -6,12 +6,12 @@ from datetime import datetime
 WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL")
 
 def fetch_json(url):
-    return requests.get(url, timeout=10).json()
+    return requests.get(url, timeout=10).text
 
 def main():
     summary = fetch_json("https://discordstatus.com/api/v2/summary.json")
     unresolved = fetch_json("https://discordstatus.com/api/v2/unresolved.json")
-
+    print(summary)
     status_desc = summary["status"]["description"]
     incidents = unresolved.get("incidents", [])
     components = summary.get("components", [])
