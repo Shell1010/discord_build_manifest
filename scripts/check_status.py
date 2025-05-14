@@ -6,7 +6,7 @@ from datetime import datetime
 WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL")
 
 def fetch_json(url):
-    return requests.get(url, timeout=10).text
+    return requests.get(url, timeout=10).json()
 
 def main():
     summary = fetch_json("https://discordstatus.com/api/v2/summary.json")
