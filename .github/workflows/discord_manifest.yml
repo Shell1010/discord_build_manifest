@@ -1,0 +1,33 @@
+name: Check Discord Manifest
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # every 6 hours
+  workflow_dispatch:       # allow manual trigger
+
+jobs:
+  check_manifest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run manifest check
+        env:
+          WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: python scripts/check_manifest.py
+
+      - name: Commit cache update
+        run: |
+          git config user.name "shell1010"
+          git config user.email "amin.dev03@gmail.com"
+          git add manifest_cache.json
+          git commit -m "Update manifest cache" || echo "No changes"
+          git push
