@@ -41,10 +41,10 @@ def ping(ip):
         return "error"
     return "unknown"
 
-# Perform the pings
 results = {}
 for ip, names in ip_to_servers.items():
     latency = ping(ip)
+    print(f"Pinging {ip} - {names}")
     for name in names:
         results[name] = {
             "ip": ip,
