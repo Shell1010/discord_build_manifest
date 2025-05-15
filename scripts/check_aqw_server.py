@@ -30,15 +30,15 @@ for name, ip in servers.items():
 def ping(ip):
     try:
         output = subprocess.check_output(
-            ["ping", "-c", "10", ip],
+            ["ping", "-c", "1", ip],
             stderr=subprocess.STDOUT,
             universal_newlines=True,
         )
         for line in output.splitlines():
             if "min/avg/max" in line or "rtt min/avg/max" in line:
                 return line.split("=")[1].strip().split(" ")[0]  # e.g. '29.1/30.2/31.0/0.3'
-    except subprocess.CalledProcessError:
-        return "error"
+    except subprocess.CalledProcessError as e:
+        return e
     return "unknown"
 
 results = {}
