@@ -6,7 +6,8 @@ import os
 
 MANIFEST_URL = "https://discord.com/api/updates/distributions/app/manifests/latest?channel=canary&platform=win&arch=x86"
 CACHE_FILE = "manifest_cache.json"
-WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # Set this as GitHub secret
+WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")  # Set this as GitHub secret
+
 
 def get_remote_manifest():
     response = requests.get(MANIFEST_URL)

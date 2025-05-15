@@ -78,7 +78,8 @@ embed = {
 }
 
 # Send to webhook
-WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL")
+WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
+print(WEBHOOK_URL)
 if not WEBHOOK_URL:
     raise ValueError("DISCORD_WEBHOOK_URL environment variable not set.")
 
