@@ -30,7 +30,7 @@ for name, ip in servers.items():
 def ping(ip):
     try:
         output = subprocess.check_output(
-            ["ping", "-c", "30", ip],
+            ["ping", "-c", "10", ip],
             stderr=subprocess.STDOUT,
             universal_newlines=True,
         )
