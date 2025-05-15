@@ -43,8 +43,8 @@ def ping(ip):
 
 results = {}
 for ip, names in ip_to_servers.items():
-    latency = ping(ip)
     print(f"Pinging {ip} - {names}")
+    latency = ping(ip)
     for name in names:
         results[name] = {
             "ip": ip,
@@ -78,7 +78,7 @@ embed = {
 }
 
 # Send to webhook
-WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
+WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL")
 if not WEBHOOK_URL:
     raise ValueError("DISCORD_WEBHOOK_URL environment variable not set.")
 
