@@ -26,7 +26,8 @@ ip_to_servers = defaultdict(list)
 for name, ip in servers.items():
     ip_to_servers[ip].append(name)
 
-def tcp_ping(ip, port=443, timeout=2, attempts=10):
+
+def tcp_ping(ip, port=443, timeout=2, attempts=30):
     latencies = []
 
     for _ in range(attempts):
