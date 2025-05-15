@@ -1,8 +1,7 @@
 
 import requests
 import os
-from datetime import datetime
-
+from datetime import datetime, timezone
 WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL")
 
 def fetch_json(url):
@@ -34,7 +33,7 @@ def main():
                     {"name": "🚨 Unresolved Incidents", "value": incident_text, "inline": False},
                     {"name": "🧩 Component Status", "value": component_text, "inline": False}
                 ],
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             }
         ]
     }
