@@ -70,6 +70,8 @@ for name in sorted(results):
         "inline": True
     })
 
+ip = requests.get("https://api.ipify.org").text
+
 # Create the embed payload
 embed = {
     "title": "🛰️ AQWorlds Server Latency Report (TCP)",
@@ -78,7 +80,7 @@ embed = {
     "timestamp": datetime.now(timezone.utc).isoformat(),
     "fields": fields,
     "footer": {
-        "text": "Generated via GitHub Actions • All times UTC"
+        "text": f"Generated via GitHub Actions • Current IP: {ip}"
     }
 }
 
