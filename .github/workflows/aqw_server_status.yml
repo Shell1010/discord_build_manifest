@@ -21,6 +21,8 @@ jobs:
         run: pip install requests
 
       - name: Run ping_servers.py
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: python scripts/check_aqw_server.py
 
       - name: Upload latency logs as artifact (optional)
