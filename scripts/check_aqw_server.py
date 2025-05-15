@@ -2,7 +2,7 @@ import subprocess
 import os
 import requests
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timezone
 
 # Server definitions
 servers = {
@@ -70,7 +70,7 @@ embed = {
     "title": "🛰️ AQWorlds Server Latency Report",
     "description": f"Pinged **{len(ip_to_servers)}** unique IPs for **{len(servers)}** servers.\n30 samples per IP, every hour.",
     "color": 0x00bfff,
-    "timestamp": datetime.utcnow().isoformat(),
+    "timestamp": datetime.now(timezone.utc).isoformat(),
     "fields": fields,
     "footer": {
         "text": "Generated via GitHub Actions • All times UTC"
