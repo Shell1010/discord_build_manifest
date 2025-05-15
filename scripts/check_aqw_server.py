@@ -59,7 +59,7 @@ for ip, names in ip_to_servers.items():
 # Build embed fields
 fields = []
 for name in sorted(results):
-    entry = results[name]http://172.65.249.41
+    entry = results[name]
     same_as = entry['source']
     shared = f" (shared with **{same_as}**)" if same_as != name else ""
     value = f"IP: `{entry['ip']}`\nLatency: `{entry['latency']}`{shared}"
