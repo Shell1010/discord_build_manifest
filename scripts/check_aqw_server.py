@@ -1,9 +1,12 @@
-import requests
+import datetime
+import json
+import os
 
-import os, json, datetime
-import pandas as pd
+import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
+import pandas as pd
 import requests
+from matplotlib.dates import ConciseDateFormatter
 
 DATA_FILE = "data.csv"
 JSON_FILE = "servers.json"
@@ -43,18 +46,22 @@ def append_today(history_df, servers):
     return pd.concat([history_df, today_df], ignore_index=True)
 
 def plot_trends(df):
-    # pivot so each server is a column
     pivot = df.pivot(index="date", columns="sName", values="iCount")
-    plt.figure(figsize=(10,6))
-    for col in pivot.columns:
-        plt.plot(pivot.index, pivot[col], label=col)
-    plt.legend(fontsize="small", ncol=2)
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-    plt.savefig("chart.png")
-    plt.close()
 
-def send_discord(df):
+    fig, ax = plt.subplots(figsize=(10,6))
+    for col in pivot.columns:
+        ax.plot(pivot.index, pivot[col], marker="o", label=col)
+
+    locator = mdates.AutoDateLocator()
+    formatter = ConciseDateFormatter(locator)   # concise, context‐aware labels
+    ax.xaxis.set_major_locator(locator)
+    ax.xaxis.set_major_formatter(formatter)
+    fig.autofmt_xdate()
+
+    ax.legend(fontsize="small", ncol=2)
+    plt.tight_layout()
+    fig.savefig("chart.png")
+    plt.close()def send_discord(df):
     webhook_url = os.environ.get("DISCORD_WEBHOOK_URL")
     if not webhook_url:
         print("ERROR: DISCORD_WEBHOOK_URL not set")
