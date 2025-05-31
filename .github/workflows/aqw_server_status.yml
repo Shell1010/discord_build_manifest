@@ -1,19 +1,20 @@
+# .github/workflows/server-stats.yml
 name: Update Server Stats
 
 on:
   schedule:
-    - cron: "0 * * * *"      # every day at midnight UTC
-  workflow_dispatch:         # manual trigger
+    - cron: "0 0 * * *"   # daily at midnight UTC
+  workflow_dispatch:
 
 jobs:
-  build-and-report:
+  update:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Check out
         uses: actions/checkout@v4
         with:
-          persist-credentials: true   # so we can push back
+          persist-credentials: true   # so the GITHUB_TOKEN can push
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -28,12 +29,12 @@ jobs:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: python scripts/check_aqw_server.py
 
-      - name: Commit updated data
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data.csv chart.png || true
-          git diff --quiet && echo "No changes to commit." || (
-            git commit -m "📊 Update server stats $(date -u +'%Y-%m-%d')"
-            git push
-          )
+      - name: Commit updated CSV & chart
+        uses: EndBug/add-and-commit@v9
+        with:
+          author_name: github-actions[bot]
+          author_email: github-actions[bot]@users.noreply.github.com
+          message: "📊 Update server stats: $(date -u +'%Y-%m-%d')"
+          add: |
+            data.csv
+            chart.png
