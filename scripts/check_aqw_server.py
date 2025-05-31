@@ -126,10 +126,10 @@ def send_discord(df):
 
 def main():
     history = load_history()
-    # servers = fetch_servers()
-    # history = append_today(history, servers)
-    # save_history(history)
-    # plot_trends(history)
+    servers = fetch_servers()
+    history = append_today(history, servers)
+    save_history(history)
+    plot_trends(history)
     send_discord(history)
 
 
