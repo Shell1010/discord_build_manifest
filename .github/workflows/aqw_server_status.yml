@@ -2,7 +2,7 @@ name: Update Server Stats
 
 on:
   schedule:
-    - cron: "0 0 * * *"      # every day at midnight UTC
+    - cron: "0 * * * *"      # every day at midnight UTC
   workflow_dispatch:         # manual trigger
 
 jobs:
