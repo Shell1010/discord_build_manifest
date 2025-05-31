@@ -106,8 +106,9 @@ def send_discord(df):
         "title": "AQW Server Populations",
         "description": f"As of {latest_time.strftime('%Y-%m-%d %H:%M UTC')}",
         "fields": [
-            {"name": row["sName"], "value": f"Count: {str(row["iCount"])} --- AVG: {avg}", "inline": True}
-            for (_, row), (_, avg) in zip(latest.iterrows(), avgs_per_server.items())
+            {"name": row["sName"], "value": f"Count: `{str(row["iCount"])}`\nAVG: `{avg:.2f}`", "inline": True}
+            for (_, row), (svr, avg) in zip(latest.iterrows(), avgs_per_server.items())
+            
         ],
         "image": {"url": "attachment://chart.png"},
     }
