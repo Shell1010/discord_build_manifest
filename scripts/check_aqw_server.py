@@ -10,9 +10,16 @@ JSON_FILE = "servers.json"
 
 def load_history():
     if os.path.exists(DATA_FILE):
-        return pd.read_csv(DATA_FILE, parse_dates=["date"])
-    else:
-        return pd.DataFrame(columns=["date","sName","iCount"])
+        # protect against a zero-byte or malformed CSV
+        if os.path.getsize(DATA_FILE) > 0:
+            try:
+                return pd.read_csv(DATA_FILE, parse_dates=["date"])
+            except pd.errors.EmptyDataError:
+                print(f"{DATA_FILE} exists but is empty – starting fresh")
+            except Exception as e:
+                print(f"Could not parse {DATA_FILE}: {e} – starting fresh")
+    # fallback
+    return pd.DataFrame(columns=["date", "sName", "iCount"])
 
 def save_history(df):
     df.to_csv(DATA_FILE, index=False)
