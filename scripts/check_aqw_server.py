@@ -1,94 +1,85 @@
-import socket
-import os
 import requests
-from collections import defaultdict
-from datetime import datetime, timezone
-from time import perf_counter
-# Server definitions
-servers = {
-    "Artix": "172.65.160.131",
-    "Swordhaven (EU)": "172.65.207.70",
-    "Yokai (SEA)": "172.65.236.72",
-    "Yorumi": "172.65.249.41",
-    "Twilly": "172.65.210.123",
-    "Safiria": "172.65.249.3",
-    "Galanoth": "172.65.249.3",
-    "Alteon": "172.65.235.85",
-    "Gravelyn": "172.65.235.85",
-    "Twig": "172.65.235.85",
-    "Sir Ver": "172.65.220.106",
-    "Espada": "172.65.220.106",
-    "Sepulchure": "172.65.220.106",
-}
 
-# Group servers by IP
-ip_to_servers = defaultdict(list)
-for name, ip in servers.items():
-    ip_to_servers[ip].append(name)
+import os, json, datetime
+import pandas as pd
+import matplotlib.pyplot as plt
+import requests
 
+DATA_FILE = "data.csv"
+JSON_FILE = "servers.json"
 
-def tcp_ping(ip, port=443, timeout=2, attempts=30):
-    latencies = []
+def load_history():
+    if os.path.exists(DATA_FILE):
+        return pd.read_csv(DATA_FILE, parse_dates=["date"])
+    else:
+        return pd.DataFrame(columns=["date","sName","iCount"])
 
-    for _ in range(attempts):
-        try:
-            start = perf_counter()
-            with socket.create_connection((ip, port), timeout=timeout):
-                end = perf_counter()
-            latency_ms = (end - start) * 1000
-            latencies.append(latency_ms)
-        except (socket.timeout, socket.error):
-            continue
+def save_history(df):
+    df.to_csv(DATA_FILE, index=False)
 
-    if not latencies:
-        return "unreachable"
+def fetch_servers():
+    url = "https://game.aq.com/game/api/login/now?ran=0.5168141750618815"
+    form_data = {"user": "JoeIsTesting", "option": 1, "pass": "abcd12345"}
+    resp = requests.post(url, data=form_data)
+    return resp.json()['servers']
 
-    avg_latency = sum(latencies) / len(latencies)
-    return f"{avg_latency:.2f} ms"
+def append_today(history_df, servers):
+    now = datetime.datetime.utcnow()
+    rows = []
+    for s in servers:
+        rows.append({
+            "date": now,
+            "sName": s["sName"],
+            "iCount": s["iCount"]
+        })
+    today_df = pd.DataFrame(rows)
+    return pd.concat([history_df, today_df], ignore_index=True)
 
-results = {}
-for ip, names in ip_to_servers.items():
-    print(f"Pinging {ip} - {names}")
-    latency = tcp_ping(ip)
-    for name in names:
-        results[name] = {
-            "ip": ip,
-            "latency": latency,
-            "source": names[0]  # Identify primary
-        }
+def plot_trends(df):
+    # pivot so each server is a column
+    pivot = df.pivot(index="date", columns="sName", values="iCount")
+    plt.figure(figsize=(10,6))
+    for col in pivot.columns:
+        plt.plot(pivot.index, pivot[col], label=col)
+    plt.legend(fontsize="small", ncol=2)
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.savefig("chart.png")
+    plt.close()
 
-# Build embed fields
-fields = []
-for name in sorted(results):
-    entry = results[name]
-    same_as = entry['source']
-    shared = f" (shared with **{same_as}**)" if same_as != name else ""
-    value = f"IP: `{entry['ip']}`\nLatency: `{entry['latency']}`{shared}"
-    fields.append({
-        "name": name,
-        "value": value,
-        "inline": True
-    })
+def send_discord(df):
+    webhook_url = os.environ.get("DISCORD_WEBHOOK_URL")
+    if not webhook_url:
+        print("ERROR: DISCORD_WEBHOOK_URL not set")
+        return
 
-ip = requests.get("https://api.ipify.org").text
+    latest_time = df["date"].max()
+    latest = df[df["date"] == latest_time]
 
-# Create the embed payload
-embed = {
-    "title": "🛰️ AQWorlds Server Latency Report (TCP)",
-    "description": f"TCP pinged **{len(ip_to_servers)}** unique IPs for **{len(servers)}** servers.\n10 sample per IP using port 443.",
-    "color": 0x00bfff,
-    "timestamp": datetime.now(timezone.utc).isoformat(),
-    "fields": fields,
-    "footer": {
-        "text": f"Generated via GitHub Actions • Current IP: {ip}"
+    embed = {
+        "title": "AQW Server Populations",
+        "description": f"As of {latest_time.strftime('%Y-%m-%d %H:%M UTC')}",
+        "fields": [
+            {"name": row["sName"], "value": str(row["iCount"]), "inline": True}
+            for _, row in latest.iterrows()
+        ],
+        # tell Discord to use our attached image
+        "image": {"url": "attachment://chart.png"}
     }
-}
 
-# Send to webhook
-WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
-print(WEBHOOK_URL)
-if not WEBHOOK_URL:
-    raise ValueError("DISCORD_WEBHOOK_URL environment variable not set.")
+    payload = {"embeds": [embed]}
+    files = {"file": ("chart.png", open("chart.png","rb"), "image/png")}
 
-requests.post(WEBHOOK_URL, json={"embeds": [embed]})
-print("Latency report sent as embed.")
+    r = requests.post(webhook_url, json=payload, files=files)
+    print("Discord response:", r.status_code, r.text)
+
+def main():
+    history = load_history()
+    servers = fetch_servers()
+    history = append_today(history, servers)
+    save_history(history)
+    plot_trends(history)
+    send_discord(history)
+
+if __name__=="__main__":
+    main()
