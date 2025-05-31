@@ -61,7 +61,9 @@ def plot_trends(df):
     ax.legend(fontsize="small", ncol=2)
     plt.tight_layout()
     fig.savefig("chart.png")
-    plt.close()def send_discord(df):
+    plt.close()
+
+def send_discord(df):
     webhook_url = os.environ.get("DISCORD_WEBHOOK_URL")
     if not webhook_url:
         print("ERROR: DISCORD_WEBHOOK_URL not set")
