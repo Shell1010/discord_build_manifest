@@ -84,6 +84,7 @@ def send_discord(df):
     }
 
     payload = {"embeds": [embed]}
+    print(payload)
     files = {"file": ("chart.png", open("chart.png","rb"), "image/png")}
 
     r = requests.post(webhook_url, json=payload, files=files)
