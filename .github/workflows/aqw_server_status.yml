@@ -3,7 +3,7 @@ name: Update Server Stats
 
 on:
   schedule:
-    - cron: "0 0 * * *"   # daily at midnight UTC
+    - cron: "0 * * * *" # daily at midnight UTC
   workflow_dispatch:
 
 jobs:
@@ -14,7 +14,7 @@ jobs:
       - name: Check out
         uses: actions/checkout@v4
         with:
-          persist-credentials: true   # so the GITHUB_TOKEN can push
+          persist-credentials: true # so the GITHUB_TOKEN can push
 
       - name: Set up Python
         uses: actions/setup-python@v4
