@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import requests
 from matplotlib.dates import ConciseDateFormatter
+import pytz
 
 DATA_FILE = "data.csv"
 JSON_FILE = "servers.json"
@@ -90,9 +91,59 @@ def plot_trends(df):
     fig.savefig("chart.png")
     plt.close()
 
+def plot_trends_with_timezones(df):
+    df['date'] = pd.to_datetime(df['date'], utc=True)
+    pivot = df.pivot(index="date", columns="sName", values="iCount")
+
+    fig, ax = plt.subplots(figsize=(12, 8))
+    for col in pivot.columns:
+        ax.plot(pivot.index, pivot[col], marker="o", label=col)
+
+    # UTC as the primary X-axis
+    locator = mdates.AutoDateLocator()
+    formatter = ConciseDateFormatter(locator)
+    ax.xaxis.set_major_locator(locator)
+    ax.xaxis.set_major_formatter(formatter)
+    ax.set_xlabel("UTC")
+
+    # Add secondary X-axes for each timezone
+    def format_timezone(tzname):
+        tz = pytz.timezone(tzname)
+        def convert(x):
+            dt = pd.to_datetime(x, utc=True)
+            return dt.tz_convert(tz).to_pydatetime()
+        return mdates.ConciseDateFormatter(locator, tz=tz)
+
+    ax2 = ax.secondary_xaxis('top', functions=(lambda x: x, lambda x: x))
+    ax2.xaxis.set_major_locator(locator)
+    ax2.xaxis.set_major_formatter(format_timezone("Asia/Manila"))
+    ax2.set_xlabel("Philippines (GMT+8)")
+
+    ax3 = ax.secondary_xaxis(-0.1, functions=(lambda x: x, lambda x: x))
+    ax3.xaxis.set_major_locator(locator)
+    ax3.xaxis.set_major_formatter(format_timezone("America/New_York"))
+    ax3.set_xlabel("US Eastern (EST/EDT)")
+
+    ax4 = ax.secondary_xaxis(-0.2, functions=(lambda x: x, lambda x: x))
+    ax4.xaxis.set_major_locator(locator)
+    ax4.xaxis.set_major_formatter(format_timezone("America/Sao_Paulo"))
+    ax4.set_xlabel("Brazil (GMT-3)")
+
+    ax5 = ax.secondary_xaxis(-0.3, functions=(lambda x: x, lambda x: x))
+    ax5.xaxis.set_major_locator(locator)
+    ax5.xaxis.set_major_formatter(format_timezone("Asia/Jayapura"))
+    ax5.set_xlabel("Indonesia (GMT+9)")
+
+    fig.autofmt_xdate()
+    ax.legend(fontsize="small", ncol=2)
+    plt.tight_layout()
+    fig.savefig("chart.png")
+    plt.close()
+
 
 def send_discord(df):
     webhook_url = os.environ.get("DISCORD_WEBHOOK_URL")
+    webhook_url = "https://canary.discord.com/api/webhooks/1372012402534518874/xN9Gl0NkjPpG_eykWWaEkM7zNvIEFOZ4_Hl2sWD-UCf2Ycsm5qdDG08qq5OzjD0rvViT"
     if not webhook_url:
         print("ERROR: DISCORD_WEBHOOK_URL not set")
         return
@@ -130,7 +181,7 @@ def main():
     servers = fetch_servers()
     history = append_today(history, servers)
     save_history(history)
-    plot_trends(history)
+    plot_trends_with_timezones(history)
     send_discord(history)
 
 
