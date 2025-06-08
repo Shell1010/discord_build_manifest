@@ -2,6 +2,7 @@ import datetime
 import json
 import os
 
+from matplotlib import colors
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -72,78 +73,114 @@ def get_average_per_server(csv_path: str = "data.csv") -> dict:
         return {}
     return df.groupby("sName")["iCount"].mean().to_dict()
 
-
-def plot_trends(df):
-    pivot = df.pivot(index="date", columns="sName", values="iCount")
-
-    fig, ax = plt.subplots(figsize=(10, 6))
-    for col in pivot.columns:
-        ax.plot(pivot.index, pivot[col], marker="o", label=col)
-
-    locator = mdates.AutoDateLocator()
-    formatter = ConciseDateFormatter(locator)  # concise, context‐aware labels
-    ax.xaxis.set_major_locator(locator)
-    ax.xaxis.set_major_formatter(formatter)
-    fig.autofmt_xdate()
-
-    ax.legend(fontsize="small", ncol=2)
-    plt.tight_layout()
-    fig.savefig("chart.png")
-    plt.close()
-
-def plot_trends_with_timezones(df):
+def plot_trends_with_timezones_s(df):
     df['date'] = pd.to_datetime(df['date'], utc=True)
     pivot = df.pivot(index="date", columns="sName", values="iCount")
-
-    fig, ax = plt.subplots(figsize=(12, 8))
-    for col in pivot.columns:
-        ax.plot(pivot.index, pivot[col], marker="o", label=col)
-
-    # UTC as the primary X-axis
+    
+    plt.style.use('default')  # Reset to clean style
+    fig, ax = plt.subplots(figsize=(14, 10))
+    fig.patch.set_facecolor('white')
+    ax.set_facecolor('#f8f9fa')
+    
+    colors_list = [
+        '#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00',
+        '#ffff33', '#a65628', '#f781bf', '#999999', '#1f77b4',
+        '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b'
+    ]
+    
+    line_styles = ['-', '--', '-.', ':', '-', '--', '-.', ':', '-', '--']
+    markers = ['o', 's', '^', 'D', 'v', '<', '>', 'p', '*', 'h']
+    
+    # Plot each series with distinct styling
+    for i, col in enumerate(pivot.columns):
+        color = colors_list[i % len(colors_list)]
+        linestyle = line_styles[i % len(line_styles)]
+        marker = markers[i % len(markers)]
+        
+        ax.plot(pivot.index, pivot[col], 
+               color=color,
+               linestyle=linestyle,
+               marker=marker, 
+               markersize=6,
+               linewidth=2.5,
+               label=col,
+               alpha=0.8,
+               markerfacecolor='white',
+               markeredgecolor=color,
+               markeredgewidth=2)
+    
+    ax.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
+    ax.set_axisbelow(True)
+    
     locator = mdates.AutoDateLocator()
     formatter = ConciseDateFormatter(locator)
     ax.xaxis.set_major_locator(locator)
     ax.xaxis.set_major_formatter(formatter)
-    ax.set_xlabel("UTC")
-
-    # Add secondary X-axes for each timezone
+    ax.set_xlabel("UTC", fontsize=12, fontweight='bold')
+    ax.set_ylabel("Count", fontsize=12, fontweight='bold')
+    
+    ax.tick_params(axis='both', which='major', labelsize=10)
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_color('#cccccc')
+    ax.spines['bottom'].set_color('#cccccc')
+    
     def format_timezone(tzname):
         tz = pytz.timezone(tzname)
-        def convert(x):
-            dt = pd.to_datetime(x, utc=True)
-            return dt.tz_convert(tz).to_pydatetime()
-        return mdates.ConciseDateFormatter(locator, tz=tz)
-
+        formatter = ConciseDateFormatter(locator, tz=tz)
+        return formatter
+    
     ax2 = ax.secondary_xaxis('top', functions=(lambda x: x, lambda x: x))
     ax2.xaxis.set_major_locator(locator)
     ax2.xaxis.set_major_formatter(format_timezone("Asia/Manila"))
-    ax2.set_xlabel("Philippines (GMT+8)")
-
-    ax3 = ax.secondary_xaxis(-0.1, functions=(lambda x: x, lambda x: x))
+    ax2.set_xlabel("Philippines (GMT+8)", fontsize=11, fontweight='bold', color='#2E8B57')
+    ax2.tick_params(axis='x', labelsize=9, colors='#2E8B57')
+    
+    ax3 = ax.secondary_xaxis(-0.12, functions=(lambda x: x, lambda x: x))
     ax3.xaxis.set_major_locator(locator)
     ax3.xaxis.set_major_formatter(format_timezone("America/New_York"))
-    ax3.set_xlabel("US Eastern (EST/EDT)")
-
-    ax4 = ax.secondary_xaxis(-0.2, functions=(lambda x: x, lambda x: x))
+    ax3.set_xlabel("US Eastern (EST/EDT)", fontsize=11, fontweight='bold', color='#4169E1')
+    ax3.tick_params(axis='x', labelsize=9, colors='#4169E1')
+    
+    ax4 = ax.secondary_xaxis(-0.24, functions=(lambda x: x, lambda x: x))
     ax4.xaxis.set_major_locator(locator)
     ax4.xaxis.set_major_formatter(format_timezone("America/Sao_Paulo"))
-    ax4.set_xlabel("Brazil (GMT-3)")
-
-    ax5 = ax.secondary_xaxis(-0.3, functions=(lambda x: x, lambda x: x))
+    ax4.set_xlabel("Brazil (GMT-3)", fontsize=11, fontweight='bold', color='#FF6347')
+    ax4.tick_params(axis='x', labelsize=9, colors='#FF6347')
+    
+    ax5 = ax.secondary_xaxis(-0.36, functions=(lambda x: x, lambda x: x))
     ax5.xaxis.set_major_locator(locator)
     ax5.xaxis.set_major_formatter(format_timezone("Asia/Jayapura"))
-    ax5.set_xlabel("Indonesia (GMT+9)")
-
-    fig.autofmt_xdate()
-    ax.legend(fontsize="small", ncol=2)
+    ax5.set_xlabel("Indonesia (GMT+9)", fontsize=11, fontweight='bold', color='#8A2BE2')
+    ax5.tick_params(axis='x', labelsize=9, colors='#8A2BE2')
+    
+    fig.autofmt_xdate(rotation=45)
+    
+    legend = ax.legend(
+        fontsize=10, 
+        ncol=min(3, len(pivot.columns)), 
+        loc='upper left',
+        frameon=True,
+        fancybox=True,
+        shadow=True,
+        framealpha=0.9,
+        facecolor='white',
+        edgecolor='#cccccc'
+    )
+    legend.get_frame().set_linewidth(0.5)
+    
+    ax.set_title("Population Analysis Across Multiple Timezones", 
+                fontsize=16, fontweight='bold', pad=20, color='#333333')
+    
     plt.tight_layout()
-    fig.savefig("chart.png")
+    plt.subplots_adjust(bottom=0.2)  # Make room for timezone labels
+    
+    fig.savefig("chart.png", dpi=300, bbox_inches='tight', 
+                facecolor='white', edgecolor='none')
     plt.close()
-
 
 def send_discord(df):
     webhook_url = os.environ.get("DISCORD_WEBHOOK_URL")
-    webhook_url = "https://canary.discord.com/api/webhooks/1372012402534518874/xN9Gl0NkjPpG_eykWWaEkM7zNvIEFOZ4_Hl2sWD-UCf2Ycsm5qdDG08qq5OzjD0rvViT"
     if not webhook_url:
         print("ERROR: DISCORD_WEBHOOK_URL not set")
         return
@@ -181,7 +218,7 @@ def main():
     servers = fetch_servers()
     history = append_today(history, servers)
     save_history(history)
-    plot_trends_with_timezones(history)
+    plot_trends_with_timezones_s(history)
     send_discord(history)
 
 
